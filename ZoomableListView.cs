@@ -15,15 +15,16 @@ namespace Application
         int mActivePointerId = INVALID_POINTER_ID;
         ScaleGestureDetector mScaleDetector;
 
-        public float mScaleFactor = 1f;
-        public float maxWidth = 0.0f;
-        public float maxHeight = 0.0f;
         float mLastTouchX;
         float mLastTouchY;
         float mPosX;
         float mPosY;
-        public float width;
-        public float height;
+
+        public float MScaleFactor { get; set; } = 1f;
+        public float MaxWidth { get; set; } = 0.0f;
+        public float MaxHeight { get; set; } = 0.0f;
+        public float ZoomableViewWidth { get; set; }
+        public float ZoomableViewHeight { get; set; }
 
         public ZoomableListView (Context context) : base (context)
         {
@@ -42,8 +43,8 @@ namespace Application
 
         protected override void OnMeasure (int widthMeasureSpec, int heightMeasureSpec)
         {
-            width = MeasureSpec.GetSize (widthMeasureSpec);
-            height = MeasureSpec.GetSize (heightMeasureSpec);
+            ZoomableViewWidth = MeasureSpec.GetSize (widthMeasureSpec);
+            ZoomableViewHeight = MeasureSpec.GetSize (heightMeasureSpec);
             base.OnMeasure (widthMeasureSpec, heightMeasureSpec);
         }
 
@@ -72,13 +73,13 @@ namespace Application
 
                 if (mPosX > 0.0f)
                     mPosX = 0.0f;
-                else if (mPosX < maxWidth)
-                    mPosX = maxWidth;
+                else if (mPosX < MaxWidth)
+                    mPosX = MaxWidth;
 
                 if (mPosY > 0.0f)
                     mPosY = 0.0f;
-                else if (mPosY < maxHeight)
-                    mPosY = maxHeight;
+                else if (mPosY < MaxHeight)
+                    mPosY = MaxHeight;
 
                 mLastTouchX = x1;
                 mLastTouchY = y1;
@@ -101,8 +102,6 @@ namespace Application
                     mActivePointerId = e.GetPointerId (newPointerIndex);
                 }
                 break;
-            default:
-                break;
             }
             return true;
         }
@@ -112,19 +111,19 @@ namespace Application
             base.OnDraw (canvas);
             canvas.Save (SaveFlags.Matrix);
             canvas.Translate (mPosX, mPosY);
-            canvas.Scale (mScaleFactor, mScaleFactor);
+            canvas.Scale (MScaleFactor, MScaleFactor);
             canvas.Restore ();
         }
 
         protected override void DispatchDraw (Canvas canvas)
         {
             canvas.Save (SaveFlags.Matrix);
-            if (mScaleFactor == 1.0f) {
+            if (MScaleFactor == 1.0f) {
                 mPosX = 0.0f;
                 mPosY = 0.0f;
             }
             canvas.Translate (mPosX, mPosY);
-            canvas.Scale (mScaleFactor, mScaleFactor);
+            canvas.Scale (MScaleFactor, MScaleFactor);
             base.DispatchDraw (canvas);
             canvas.Restore ();
             Invalidate ();
@@ -141,14 +140,13 @@ namespace Application
 
             public override bool OnScale (ScaleGestureDetector detector)
             {
-                _zListView.mScaleFactor *= detector.ScaleFactor;
-                _zListView.mScaleFactor = Math.Max (1.0f, Math.Min (_zListView.mScaleFactor, 3.0f));
-                _zListView.maxWidth = _zListView.width - (_zListView.width * _zListView.mScaleFactor);
-                _zListView.maxHeight = _zListView.height - (_zListView.height * _zListView.mScaleFactor);
+                _zListView.MScaleFactor *= detector.ScaleFactor;
+                _zListView.MScaleFactor = Math.Max (1.0f, Math.Min (_zListView.MScaleFactor, 3.0f));
+                _zListView.MaxWidth = _zListView.ZoomableViewWidth - (_zListView.ZoomableViewWidth * _zListView.MScaleFactor);
+                _zListView.MaxHeight = _zListView.ZoomableViewHeight - (_zListView.ZoomableViewHeight * _zListView.MScaleFactor);
                 _zListView.Invalidate ();
                 return true;
             }
         }
     }
 }
-
